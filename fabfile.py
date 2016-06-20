@@ -10,7 +10,7 @@ def publish(test='yes'):
     if test == 'yes':
         validate()
 
-    from feedly import __version__
+    from stream_framework import __version__
     tag_name = 'v%s' % __version__
     local('python setup.py sdist upload')
 
@@ -20,9 +20,10 @@ def publish(test='yes'):
 
 def validate():
     with cd(PROJECT_ROOT):
-        local('pep8 --exclude=migrations --ignore=E501,E225,W293 feedly')
-        # local('pyflakes -x W feedly')
-        local('py.test -sl --tb=short --cov coveralls --cov-report html --cov feedly feedly/tests')
+        local('pep8 --exclude=migrations --ignore=E501,E225,W293 stream_framework')
+        # local('pyflakes -x W stream_framework')
+        local(
+            'py.test -sl --tb=short --cov coveralls --cov-report html --cov stream_framework stream_framework/tests')
 
 
 def clean():
@@ -37,5 +38,5 @@ def clean():
 
 
 def docs():
+    local('DJANGO_SETTINGS_MODULE=stream_framework.tests.settings pandoc -s -w rst README.md -o docs/readme.rst')
     local('sphinx-build -Eav docs html')
-    local('pandoc -s -w rst README.md -o README.rest')

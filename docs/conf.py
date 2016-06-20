@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Feedly documentation build configuration file, created by
+# stream_framework documentation build configuration file, created by
 # sphinx-quickstart on Tue Jul 16 18:07:58 2013.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -13,6 +13,17 @@
 
 import sys
 import os
+
+# on_rtd is whether we are on readthedocs.org
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+
+if not on_rtd:  # only import and set the theme if we're building docs locally
+    import sphinx_rtd_theme
+    html_theme = 'sphinx_rtd_theme'
+    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+
+# otherwise, readthedocs.org uses their theme by default, so no need to
+# specify it
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -41,16 +52,13 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Feedly'
+project = u'Stream Framework'
 copyright = u'2013, Thierry Schellenbach'
 
 project_root = os.path.abspath('..')
 example_path = os.path.abspath(os.path.join('..', 'pinterest_example'))
 sys.path.append(example_path)
 sys.path.append(project_root)
-os.environ['DJANGO_SETTINGS_MODULE'] = 'core.settings'
-example_app = __import__('core')
-from core import settings
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -100,7 +108,7 @@ pygments_style = 'autumn'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'nature'
+#html_theme = 'nature'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -173,7 +181,7 @@ html_static_path = ['_static']
 # html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'Feedlydoc'
+htmlhelp_basename = 'stream_frameworkdoc'
 
 
 # -- Options for LaTeX output --------------------------------------------
@@ -192,7 +200,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-    ('index', 'Feedly.tex', u'Feedly Documentation',
+    ('index', 'stream_framework.tex', u'stream_framework Documentation',
      u'Thierry Schellenbach', 'manual'),
 ]
 
@@ -222,7 +230,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'feedly', u'Feedly Documentation',
+    ('index', 'Stream Framework', u'Stream Framework Documentation',
      [u'Thierry Schellenbach'], 1)
 ]
 
@@ -236,8 +244,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    ('index', 'Feedly', u'Feedly Documentation',
-     u'Thierry Schellenbach', 'Feedly', 'One line description of project.',
+    ('index', 'Stream Framework', u'Stream Framework Documentation',
+     u'Thierry Schellenbach', 'Stream Framework', 'One line description of project.',
      'Miscellaneous'),
 ]
 
@@ -257,7 +265,7 @@ texinfo_documents = [
 # -- Options for Epub output ---------------------------------------------
 
 # Bibliographic Dublin Core info.
-epub_title = u'Feedly'
+epub_title = u'Stream Framework'
 epub_author = u'Thierry Schellenbach'
 epub_publisher = u'Thierry Schellenbach'
 epub_copyright = u'2013, Thierry Schellenbach'

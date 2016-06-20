@@ -1,45 +1,120 @@
-Feedly
-------
+Stream Framework
+----------------
 
-[![Build Status](https://travis-ci.org/tschellenbach/Feedly.png?branch=master)](https://travis-ci.org/tschellenbach/Feedly)
-
-[![Coverage Status](https://coveralls.io/repos/tschellenbach/Feedly/badge.png?branch=master&random=1)](https://coveralls.io/r/tschellenbach/Feedly?branch=master)
-
-**Note**
-
-The Feedly open source project is in no way related to feedly.com. To avoid confusion we are considering renaming the 1.0 release of the project.
+[![Build Status](https://travis-ci.org/tschellenbach/Stream-Framework.png?branch=master)](https://travis-ci.org/tschellenbach/Stream-Framework)
+[![PyPI version](https://badge.fury.io/py/stream-framework.svg)](http://badge.fury.io/py/stream-framework)
 
 
-## What can you build? ##
+## Activity Streams & Newsfeeds ##
 
-Feedly allows you to build newsfeed and notification systems using Cassandra and/or Redis.
-Examples of what you can build are the Facebook newsfeed, your Twitter stream or your Pinterest following page.
-We've built Feedly for [Fashiolista] [fashiolista] where it powers the [flat feed] [fashiolista_flat], [aggregated feed] [fashiolista_aggregated] and the [notification system] [fashiolista_notification].
+
+<p align="center">
+  <img src="https://dvqg2dogggmn6.cloudfront.net/images/mood-home.png" alt="Examples of what you can build" title="What you can build"/>
+</p>
+
+Stream Framework is a python library which allows you to build activity streams & newsfeeds using Cassandra and/or Redis. If you're not using python have a look at [Stream] (https://getstream.io/), which supports Node, Ruby, PHP, Python, Go, Scala,  Java and REST.
+
+Examples of what you can build are:
+
+* Activity streams such as seen on Github
+* A Twitter style newsfeed
+* A feed like Instagram/ Pinterest
+* Facebook style newsfeeds
+* A notification system
+
 (Feeds are also commonly called: Activity Streams, activity feeds, news streams.)
 
+
+
 [fashiolista]: http://www.fashiolista.com/
+[stream]: http://getstream.io/
+[blog]: http://blog.getstream.io/post/98149880113/introducing-the-stream-framework
+[stream_js]: https://github.com/tschellenbach/stream-js
+[stream_python]: https://github.com/tschellenbach/stream-python
+[stream_php]: https://github.com/tbarbugli/stream-php
+[stream_ruby]: https://github.com/tbarbugli/stream-ruby
 [fashiolista_flat]: http://www.fashiolista.com/feed/?feed_type=F
 [fashiolista_aggregated]: http://www.fashiolista.com/feed/?feed_type=A
 [fashiolista_notification]: http://www.fashiolista.com/my_style/notification/
-[example_app_link]: https://github.com/tbarbugli/feedly_pin/
+[example_app_link]: https://github.com/tbarbugli/stream_framework_example
 
-[readme_developing]: https://github.com/tschellenbach/Feedly/blob/master/README.md#developing-feedly
-To quickly make you acquainted with Feedly, we've created a Pinterest like example application, you can find it [here] [example_app_link]
 
-**Authors**
 
- * Thierry Schellenbach
- * Tommaso Barbugli
+## Stream ##
+
+<a href="https://getstream.io/"><img src="http://dvqg2dogggmn6.cloudfront.net/images/getstream-dot-io-logo-light.png" alt="Build scalable newsfeeds and activity streams using getstream.io" title="Build scalable newsfeeds and activity streams using getstream.io" width="300px"/></a>
+
+Stream Framework's authors also offer a web service for building scalable newsfeeds & activity streams at [getstream.io] [stream]
+It allows you to create your feeds by talking to a beautiful and easy to use REST API. There are clients available for Node, Ruby, PHP, Python, Go, Scala and Java. The [get started](https://getstream.io/get_started/#intro) explains the API & concept in a few clicks. Its a lot easier to use, free up to 3 million feed updates and saves you the hassle of maintaining Cassandra, Redis, Faye, RabbitMQ and Celery workers.
+
+## Stream Framework ##
+
+
+**Installation**
+
+Installation through pip is recommended::
+
+    $ pip install stream-framework
+
+By default stream-framework installs the required dependencies for redis and cassandra (cassandra-driver 2.7)
+
+***Install stream-framework without Cassandra (redis only)***
+
+    $ pip install stream-framework --install-option="--no-cassandra"
+
+    or
+
+    $ python setup.py install --no-cassandra
+
+***Install stream-framework and use Cassandra 3***
+
+    $ pip install stream-framework --install-option="--cassandra3"
+
+    or
+
+    $ python setup.py install --cassandra3
+
+**Authors & Contributors**
+
+ * Thierry Schellenbach (thierry at getstream.io)
+ * Tommaso Barbugli (tommaso at getstream.io)
+ * Anislav Atanasov
  * Guyon Morée
 
-## Using Feedly ##
+**Resources**
+
+ * [Documentation] 
+ * [Bug Tracker] 
+ * [Code] 
+ * [Travis CI] 
+ * [Stackoverflow]
+ 
+**Example application**
+
+We've included a [Pinterest like example application] [example_app_link] based on Stream Framework. 
+
+**Tutorials**
+
+ * [Pinterest style feed example app] [mellowmorning_example]
+ 
+
+[mellowmorning_example]: http://www.mellowmorning.com/2013/10/18/scalable-pinterest-tutorial-feedly-redis/
+[Documentation]: https://stream-framework.readthedocs.org/
+[Bug Tracker]: https://github.com/tschellenbach/Stream-Framework/issues
+[Code]: http://github.com/tschellenbach/Stream-Framework
+[Travis CI]: http://travis-ci.org/tschellenbach/Stream-Framework/
+[Stackoverflow]: http://stackoverflow.com/questions/tagged/stream-framework
+
+## Using Stream Framework ##
 
 This quick example will show you how to publish a Pin to all your followers. So lets create
 an activity for the item you just pinned.
 
 ```python
+from stream_framework.activity import Activity
+
+
 def create_activity(pin):
-    from feedly.activity import Activity
     activity = Activity(
         pin.user_id,
         PinVerb,
@@ -52,17 +127,20 @@ def create_activity(pin):
 ```
 
 Next up we want to start publishing this activity on several feeds.
-First of we want to insert it into your personal feed, and secondly into the feeds of all your followers.
-Lets start first by defining these feeds.
+First of all we want to insert it into your personal feed, and then into your followers' feeds.
+Lets start by defining these feeds.
 
 ```python
-# setting up the feeds
 
-class PinFeed(RedisFeed):
-    key_format = 'feed:normal:%(user_id)s'
+from stream_framework.feeds.redis import RedisFeed
+
 
 class UserPinFeed(PinFeed):
     key_format = 'feed:user:%(user_id)s'
+
+
+class PinFeed(RedisFeed):
+    key_format = 'feed:normal:%(user_id)s'
 ```
 
 Writing to these feeds is very simple. For instance to write to the feed of user 13 one would do
@@ -74,12 +152,15 @@ feed.add(activity)
 ```
 
 But we don't want to publish to just one users feed. We want to publish to the feeds of all users which follow you.
-This action is called a fanout and is abstracted away in the Feedly manager class.
-We need to subclass the Feedly class and tell it how we can figure out which user follow us.
+This action is called a fanout and is abstracted away in the manager class.
+We need to subclass the Manager class and tell it how we can figure out which user follow us.
 
 ```python
 
-class PinFeedly(Feedly):
+from stream_framework.feed_managers.base import Manager
+
+
+class PinManager(Manager):
     feed_classes = dict(
         normal=PinFeed,
     )
@@ -94,13 +175,13 @@ class PinFeedly(Feedly):
         ids = Follow.objects.filter(target=user_id).values_list('user_id', flat=True)
         return {FanoutPriority.HIGH:ids}
     
-feedly = PinFeedly()
+manager = PinManager()
 ```
 
-Now that the feedly class is setup broadcasting a pin becomes as easy as
+Now that the manager class is setup broadcasting a pin becomes as easy as
 
 ```python
-feedly.add_pin(pin)
+manager.add_pin(pin)
 ```
 
 Calling this method wil insert the pin into your personal feed and into all the feeds of users which follow you.
@@ -115,7 +196,7 @@ def feed(request):
     Items pinned by the people you follow
     '''
     context = RequestContext(request)
-    feed = feedly.get_feeds(request.user.id)['normal']
+    feed = manager.get_feeds(request.user.id)['normal']
     activities = list(feed[:25])
     context['activities'] = activities
     response = render_to_response('core/feed.html', context)
@@ -123,108 +204,20 @@ def feed(request):
 
 ```
 
-This example only briefly covered how Feedly works.
+This example only briefly covered how Stream Framework works.
 The full explanation can be found on read the docs.
 
 
-**Documentation**
+## Features ##
 
-[Installing Feedly] [docs_install]
-[docs_install]: https://feedly.readthedocs.org/en/latest/installation.html
-[Settings] [docs_settings]
-[docs_settings]: https://feedly.readthedocs.org/en/latest/settings.html
-[Feedly (Feed manager class) implementation] [docs_feedly]
-[docs_feedly]: https://feedly.readthedocs.org/en/latest/feedly.feed_managers.html#module-feedly.feed_managers.base
-[Feed class implementation] [docs_feed]
-[docs_feed]: https://feedly.readthedocs.org/en/latest/feedly.feeds.html
-[Choosing the right storage backend] [docs_storage_backend]
-[docs_storage_backend]: https://feedly.readthedocs.org/en/latest/choosing_a_storage_backend.html
-[Building notification systems] [docs_notification_systems]
-[docs_notification_systems]: https://feedly.readthedocs.org/en/latest/notification_systems.html
-
-**Tutorials**
-
-[Pinterest style feed example app] [mellowmorning_example]
-[mellowmorning_example]: http://www.mellowmorning.com/2013/10/18/scalable-pinterest-tutorial-feedly-redis/
-
-
-## Feedly Design ##
-
-*The first approach*
-
-A first feed solution usually looks something like this:
-
-```sql
-SELECT * FROM tweets
-JOIN follow ON (follow.target_id = tweet.user_id)
-WHERE follow.user_id = 13
-```
-
-This works in the beginning, and with a well tuned database will keep on working nicely for quite some time.
-However at some point the load becomes too much and this approach falls apart. Unfortunately it's very hard
-to split up the tweets in a meaningfull way. You could split it up by date or user, but every query will still hit
-many of your shards. Eventually this system collapses, read more about this in [Facebook's presentation] [facebook].
-
-*Push or Push/Pull*
-In general there are two similar solutions to this problem.
-
-In the push approach you publish your activity (ie a tweet on twitter) to all of your followers. So basically you create a small list
-per user to which you insert the activities created by the people they follow. This involves a huge number of writes, but reads are really fast they can easily be sharded.
-
-For the push/pull approach you implement the push based systems for a subset of your users. At Fashiolista for instance we used to
-have a push based approach for active users. For inactive users we only kept a small feed and eventually used a fallback to the database
-when we ran out of results.
-
-**Features**
-
-Feedly uses celery and Redis/Cassandra to build a system with heavy writes and extremely light reads.
+Stream Framework uses celery and Redis/Cassandra to build a system with heavy writes and extremely light reads.
 It features:
 
   - Asynchronous tasks (All the heavy lifting happens in the background, your users don't wait for it)
-  - Reusable components (You will need to make tradeoffs based on your use cases, Feedly doesnt get in your way)
+  - Reusable components (You will need to make tradeoffs based on your use cases, Stream Framework doesnt get in your way)
   - Full Cassandra and Redis support
   - The Cassandra storage uses the new CQL3 and Python-Driver packages, which give you access to the latest Cassandra features.
-  - Built for the extremely performant Cassandra 2.0
-
-**Feedly**
-
-Feedly allows you to easily use Cassndra/Redis and Celery (an awesome task broker) to build infinitely scalable feeds.
-The high level functionality is located in 4 classes.
-
-  - Activities
-  - Feeds
-  - Feed managers (Feedly)
-  - Aggregators
-
-*Activities* are the blocks of content which are stored in a feed. It follows the nomenclatura from the [activity stream spec] [astream]
-[astream]: http://activitystrea.ms/specs/atom/1.0/#activity.summary
-Every activity therefor stores at least:
-
-  - Time (the time of the activity)
-  - Verb (the action, ie loved, liked, followed)
-  - Actor (the user id doing the action)
-  - Object (the object the action is related to)
-  - Extra context (Used for whatever else you need to store at the activity level)
-
-Optionally you can also add a target (which is best explained in the activity docs)
-
-
-*Feeds* are sorted containers of activities. You can easily add and remove activities from them.
-
-*Feedly* classes (feed managers) handle the logic used in addressing the feed objects. 
-They handle the complex bits of fanning out to all your followers when you create a new object (such as a tweet).
-
-
-In addition there are several utility classes which you will encounter
-
-  - Serializers (classes handling serialization of Activity objects)
-  - Aggregators (utility classes for creating smart/computed feeds based on algorithms)
-  - Timeline Storage (cassandra or redis specific storage functions for sorted storage)
-  - Activity Storage (cassandra or redis specific storage for hash/dict based storage)
-  
-
-
-
+  - Build for the extremely performant Cassandra 2.1. 2.2 and 3.3 also pass the test suite, but no production experience.
 
 
 ## Background Articles ##
@@ -242,14 +235,19 @@ Redis based, database fallback, very similar to Fashiolista's old approach.
 
 [etsy]: http://www.slideshare.net/danmckinley/etsy-activity-feeds-architecture/
 
-[Facebook history] [facebook]
+[linkedin]: https://engineering.linkedin.com/blog/2016/03/followfeed--linkedin-s-feed-made-faster-and-smarter
+[LinkedIn ranked feeds] [linkedin]
 
 [facebook]: http://www.infoq.com/presentations/Facebook-Software-Stack
+[Facebook history] [facebook]
 
-[Django project, with good naming conventions.] [djproject]
+
 [djproject]: http://justquick.github.com/django-activity-stream/
-http://activitystrea.ms/specs/atom/1.0/
-(actor, verb, object, target)
+[Django project with good naming conventions] [djproject]
+
+
+[activity_stream]: http://activitystrea.ms/specs/atom/1.0/
+[Activity stream specification] [activity_stream]
 
 [Quora post on best practises] [quora]
 
@@ -273,7 +271,7 @@ http://activitystrea.ms/specs/atom/1.0/
 
 [Yahoo Research Paper] [yahoo]
 
-[yahoo]: http://research.yahoo.com/files/sigmod278-silberstein.pdf
+[yahoo]: http://jeffterrace.com/docs/feeding-frenzy-sigmod10-web.pdf
 
 [Twitter’s approach] [twitter]
 
@@ -283,32 +281,19 @@ http://activitystrea.ms/specs/atom/1.0/
 
 [instagram]: http://planetcassandra.org/blog/post/instagram-making-the-switch-to-cassandra-from-redis-75-instasavings
 
+[Relevancy at Etsy][etsy_relevancy]
+[etsy_relevancy]: http://mimno.infosci.cornell.edu/info6150/readings/p1640-hu.pdf
+
+[Zite architecture overview][zite]
+[zite]: http://blog.zite.com/2012/01/11/zite-under-the-hood/
+
+[Ranked feeds with ES][es]
+[es]: https://speakerdeck.com/viadeoteam/a-personalized-news-feed
+
+[Riak at Xing - by Dr. Stefan Kaes & Sebastian Röbke][xing]
+[xing]: https://www.youtube.com/watch?v=38yKu5HR-tM
+
+[Riak and Scala at Yammer][yammer]
+[yammer]: http://basho.com/posts/business/riak-and-scala-at-yammer/
 
 
-
-## Developing Feedly ##
-
-**Vagrant and Pinterest example**
-
-Clone the github repo and run the following commands to setup your development environment using vagrant.
-Booting a vagrant machine will take a bit of time, be sure to grab a cup of coffee while waiting for vagrant up to complete.
-
-```bash
-From the root of the feedly project run:
->>> vagrant up
->>> vagrant provision
->>> vagrant ssh
->>> git clone https://github.com/tbarbugli/feedly_pin.git pinterest_example
->>> cd pinterest_example
->>> python manage.py runserver 0:8000
-```
-
-Visit [192.168.50.55:8000](http://192.168.50.55:8000/) to see the example app up and running.
-The most interesting bit of example code are located in:
-
-core/pin_feed.py and core/pin_feedly.py
-
-The included Pinterest example app has its own test suite. You can run this by executing
-```bash
->>> python pinterest_example/manage.py test core
-```

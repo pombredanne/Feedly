@@ -1,35 +1,32 @@
 Settings
 ========
 
-.. note:: Settings currently only support Django settings. To add support for Flask or other frameworks simply change feedly.settings.py
+.. note:: Settings currently only support Django settings. To add support for Flask or other frameworks simply change stream_framework.settings.py
 
 Redis Settings
 **************
 
-**FEEDLY_NYDUS_CONFIG**
+**STREAM_REDIS_CONFIG**
 
-The nydus settings for redis, keep here the list of redis servers you want to use for feedly storage
+The settings for redis, keep here the list of redis servers you want to use as feed storage
 
 Defaults to
 
 .. code-block:: python
 
-    {
-        'CONNECTIONS': {
-            'redis': {
-                'engine': 'nydus.db.backends.redis.Redis',
-                'router': 'nydus.db.routers.redis.PrefixPartitionRouter',
-                'hosts': {
-                    0: {'prefix': 'default', 'db': 0, 'host': 'localhost', 'port': 6379},
-                }
-            },
-        }
+    STREAM_REDIS_CONFIG = {
+        'default': {
+            'host': '127.0.0.1',
+            'port': 6379,
+            'db': 0,
+            'password': None
+        },
     }
 
 Cassandra Settings
 ******************
 
-**FEEDLY_CASSANDRA_HOSTS**
+**STREAM_CASSANDRA_HOSTS**
 
 The list of nodes that are part of the cassandra cluster.
 
@@ -37,25 +34,38 @@ The list of nodes that are part of the cassandra cluster.
 
 Defaults to ``['localhost']``
 
-**FEEDLY_DEFAULT_KEYSPACE**
+**STREAM_DEFAULT_KEYSPACE**
 
 The cassandra keyspace where feed data is stored
 
-Defaults to ``feedly``
+Defaults to ``stream_framework``
 
-**FEEDLY_CASSANDRA_CONSISTENCY_LEVEL**
+**STREAM_CASSANDRA_CONSISTENCY_LEVEL**
 
 The consistency level used for both reads and writes to the cassandra cluster.
 
 Defaults to ``cassandra.ConsistencyLevel.ONE``
 
-**FEEDLY_TRACK_METRICS**
+**CASSANDRA_DRIVER_KWARGS**
 
-Enable cassandra driver metrics, if enabled the connection will track metrics using python scales
-You need to configure python scales (which comes installed as a dependency) in order to actually use those metrics
+Extra keyword arguments sent to cassandra driver (see http://datastax.github.io/python-driver/_modules/cassandra/cluster.html#Cluster)
 
-Defaults to ``False``
-
+Defaults to ``{}``
 
 
+Metric Settings
+***************
 
+**STREAM_METRIC_CLASS**
+
+The metric class that will be used to collect feeds metrics.
+
+.. note:: The default metric class is not collecting any metric and should be used as example for subclasses
+
+Defaults to ``stream_framework.metrics.base.Metrics``
+
+**STREAM_METRICS_OPTIONS**
+
+A dictionary with options to send to the metric class at initialisation time.
+
+Defaults to ``{}``
